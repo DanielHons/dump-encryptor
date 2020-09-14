@@ -13,16 +13,16 @@ It is more secure, to mark the key as trusted using the gpg cli and omit the fla
 """
 }
 
-autoTrust=" --trust-model always "
+autoTrust=""
 
-tmpDir="/tmp/foo"
+tmpDir="/tmp/dump-encrypt"
 mkdir $tmpDir
 
 while getopts 'r:f:o:t' flag; do
   case "${flag}" in
     r) recepient="${OPTARG}" ;;
     f) file="${OPTARG}" ;;
-    t) autoTrust="true" ;;
+    t) autoTrust=" --trust-model always " ;;
     *) print_usage
        exit 1 ;;
   esac
@@ -48,7 +48,7 @@ fi
 
 echo $SYMMETRIC_KEY > ${tmpDir}/sym.key
 gpg --armor --output ${tmpDir}/${fileBaseName}.asc --symmetric --pinentry-mode=loopback --passphrase  "$SYMMETRIC_KEY" $file
-gpg --armor -e -r $recepient --output ${tmpDir}/key.asc ${tmpDir}/sym.key
+gpg --armor ${autoTrust} -e -r $recepient --output ${tmpDir}/key.asc ${tmpDir}/sym.key
 
 rm ${tmpDir}/sym.key
 
@@ -60,7 +60,7 @@ then
   exit 1;
 fi
 SYMMETRIC_KEY=\$(gpg -d key.asc)
-gpg -d ${autoTrust}--output ${fileBaseName} --pinentry-mode=loopback --passphrase  "\$SYMMETRIC_KEY" ${fileBaseName}.asc
+gpg -d --output ${fileBaseName} --pinentry-mode=loopback --passphrase  "\$SYMMETRIC_KEY" ${fileBaseName}.asc
 EOF
 
 chmod +x ${tmpDir}/decrypt.sh
